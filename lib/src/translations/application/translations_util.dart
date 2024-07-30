@@ -81,4 +81,22 @@ class TranslationsUtil {
 
     return entries;
   }
+
+  Map<String, List<String>> findMissingKeys(
+      List<TranslationEntry> translations) {
+    Map<String, List<String>> missingKeys = {};
+    TranslationEntry translationEntryWithAllLocales = translations.reduce(
+        (TranslationEntry a, TranslationEntry b) =>
+            b.locales.length > a.locales.length ? b : a);
+
+    for (TranslationEntry entry in translations) {
+      Set<String> missingLocales =
+          translationEntryWithAllLocales.locales.difference(entry.locales);
+      for (String missingLocale in missingLocales) {
+        missingKeys.putIfAbsent(missingLocale, () => []).add(entry.key);
+      }
+    }
+
+    return missingKeys;
+  }
 }

@@ -36,20 +36,8 @@ Future<void> main(List<String> args) async {
   }
 
   // Identify missing translation keys.
-  Map<String, List<String>> missingKeys = {};
-  TranslationEntry translationEntryWithAllLocales = translations.reduce(
-      (TranslationEntry a, TranslationEntry b) =>
-          b.locales.length > a.locales.length ? b : a);
-
-  for (TranslationEntry entry in translations) {
-    // Find locales where the current key is missing.
-    Set<String> missingLocales =
-        translationEntryWithAllLocales.locales.difference(entry.locales);
-    for (String missingLocale in missingLocales) {
-      // Add the missing key to the corresponding locale's list.
-      missingKeys.putIfAbsent(missingLocale, () => []).add(entry.key);
-    }
-  }
+  Map<String, List<String>> missingKeys =
+      translationsUtil.findMissingKeys(translations);
 
   // Report any missing keys.
   if (missingKeys.isNotEmpty) {
