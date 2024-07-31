@@ -1,6 +1,6 @@
 name: intl_usage
-description: A Dart package to analyze and validate internationalization (i18n) resources, ensuring consistency and completeness across different locales. Helps identify missing translation keys and streamline the localization process.
-version: 1.0.0
+description: A Dart package to analyze and validate internationalization (i18n) resources, ensuring consistency and completeness across different locales.
+version: 1.0.1
 repository: https://github.com/ChiangChu/intl_usage
 
 environment:
