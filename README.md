@@ -1,7 +1,7 @@
 # Find Unused Translations in Flutter Projects
 
 [![Pub Version](https://img.shields.io/pub/v/intl_usage.svg)](https://pub.dev/packages/intl_usage)
-[![Build Status](https://img.shields.io/github/workflow/status/ChiangChu/intl_usage/Dart%20CI)](https://github.com/ChiangChu/intl_usage/actions)
+[![Build Status](https://github.com/ChiangChu/intl_usage/actions/workflows/dart.yml/badge.svg)](https://github.com/ChiangChu/intl_usage/actions)
 [![codecov](https://codecov.io/gh/ChiangChu/intl_usage/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/ChiangChu/intl_usage)
 
 **This package is used to find unused keys inside your easy_localization files.**
