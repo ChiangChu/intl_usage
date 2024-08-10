@@ -32,7 +32,7 @@ class UsagesUtils {
         entries.map((entry) => MapEntry(entry.key, <UsageEntry>{})));
 
     // Precompile the regular expression for matching translation keys.
-    RegExp regExp = RegExp("((?:'|\")[A-Za-z0-9}{\$]+(?:'|\"))");
+    RegExp regExp = RegExp("((?:'|\")[A-Za-z0-9.}{\$]+(?:'|\"))");
 
     // Iterate through each Dart file.
     for (FileSystemEntity file in dartFiles) {
@@ -61,9 +61,9 @@ class UsagesUtils {
           for (RegExpMatch match in matches) {
             coverage = _calculateCoverage(
               translationKey: key,
-              usageValue: match[0]!,
+              usageValue: match[0]!.replaceAll(RegExp('["\']'), ''),
             );
-            if (coverage >= 0) {
+            if (coverage > 0) {
               // Add a UsageEntry for the matched key.
               usages[entry.key]!.add(UsageEntry(
                 filename: relativePath,
@@ -109,8 +109,7 @@ class UsagesUtils {
       String keyPart = keyParts[i];
       if (valueParts.length > i) {
         // Remove quotes from the value part.
-        String valuePart =
-            valueParts[i].replaceAll('\'', '').replaceAll("\"", '');
+        String valuePart = valueParts[i];
 
         if (keyPart == valuePart) {
           // Increment coverage based on the number of matching parts.
