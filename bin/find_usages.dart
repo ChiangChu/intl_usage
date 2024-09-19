@@ -13,6 +13,7 @@ final Logger _logger = Logger();
 /// Entry point for the command-line application.
 Future<void> main(List<String> args) async {
   final ArgParser parser = ArgParserUtil().parser;
+  final FileSystemUtils utils = FileSystemUtils();
   final UsagesUtils usagesUtils = UsagesUtils();
   final TranslationsUtil translationsUtil = TranslationsUtil();
 
@@ -33,12 +34,13 @@ Future<void> main(List<String> args) async {
   try {
     // Get the translation entries from the specified path.
     List<TranslationEntry> translations =
-        await translationsUtil.getTranslations(path);
+        await translationsUtil.getTranslations(path, fileSystemUtils: utils);
 
     // Get the usage results (unused and unsure entries).
     usageResult = await _printUsages(
       usagesUtils.getUsages(
         translations,
+        fileSystemUtils: utils,
       ),
     );
   } on FileNotFoundException catch (e) {

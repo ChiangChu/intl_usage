@@ -1,3 +1,18 @@
+## [1.1.0] - 2024-09-19
+
+### Added
+
+* add tests for the functions.
+* add path + mocktail library.
+
+### Changed
+
+* refactor for better testability.
+
+### Fixed
+
+* some issues with loading wrong json files.
+
 ## [1.0.2] - 2024-08-10
 
 ### Changed

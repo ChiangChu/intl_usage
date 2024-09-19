@@ -18,4 +18,16 @@ class UsageEntry {
     required this.line,
     this.isUnsure = false,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UsageEntry &&
+          runtimeType == other.runtimeType &&
+          filename == other.filename &&
+          line == other.line &&
+          isUnsure == other.isUnsure;
+
+  @override
+  int get hashCode => filename.hashCode ^ line.hashCode ^ isUnsure.hashCode;
 }

@@ -7,8 +7,9 @@ import 'package:intl_usage/src/file_system/application/file_system_utils.dart';
 
 final Logger _logger = Logger();
 
-/// Entry point for the command-lineapplication.
+/// Entry point for the command-line application.
 Future<void> main(List<String> args) async {
+  final FileSystemUtils utils = FileSystemUtils();
   final ArgParser parser = ArgParserUtil().parser;
   final TranslationsUtil translationsUtil = TranslationsUtil();
 
@@ -28,7 +29,8 @@ Future<void> main(List<String> args) async {
   List<TranslationEntry> translations;
   try {
     // Get the translation entries from the specified path.
-    translations = await translationsUtil.getTranslations(path);
+    translations =
+        await translationsUtil.getTranslations(path, fileSystemUtils: utils);
   } on FileNotFoundException catch (e) {
     // Handle the case where no translations are found.
     _logger.printError(e.message);

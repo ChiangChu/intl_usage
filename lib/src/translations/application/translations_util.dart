@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flat/flat.dart';
 import 'package:intl_usage/src/translations/domain/translation_entry.dart';
+import 'package:path/path.dart';
 
 import '../../file_system/application/file_system_utils.dart';
 
@@ -14,25 +15,25 @@ class TranslationsUtil {
   /// [translationPath] The relative path to the directory containing translation JSON files.
   ///
   /// Returns a list of [TranslationEntry] objects representing the extracted translations.
-  Future<List<TranslationEntry>> getTranslations(String translationPath) async {
+  Future<List<TranslationEntry>> getTranslations(
+    String translationPath, {
+    required FileSystemUtils fileSystemUtils,
+  }) async {
     List<TranslationEntry> entries = <TranslationEntry>[];
 
     // Find all JSON files in the translation directory.
-    List<FileSystemEntity> translationFiles =
-        await FileSystemUtils.searchForFiles(
+    List<File> translationFiles = await fileSystemUtils.searchForFiles(
       relativePath: translationPath,
       extension: FileExtension.json,
     );
 
     // Regular expression to extract the locale from the filename.
-    RegExp regExp = RegExp(r'[a-z]{2}(-[A-Z]{2})?\.json$');
+    RegExp regExp = RegExp(r'^[a-zA-Z]{2}(-[a-zA-Z]{2})?\.json$');
 
     // Iterate through each translation file.
-    for (FileSystemEntity entity in translationFiles) {
-      File currentFile = File(entity.path);
-
+    for (File currentFile in translationFiles) {
       // Check if the filename matches the locale pattern before decoding
-      String? localeMatch = regExp.stringMatch(currentFile.path);
+      String? localeMatch = regExp.stringMatch(basename(currentFile.path));
       if (localeMatch == null) {
         // No locale found in filename, skip this file.
         continue;
