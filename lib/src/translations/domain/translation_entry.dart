@@ -1,5 +1,9 @@
+import 'package:collection/collection.dart';
+
 /// Represents a single translation entry with its key and the locales it's available in.
 class TranslationEntry {
+  static const SetEquality<String> _setEquality = SetEquality<String>();
+
   /// The unique key identifying the translation.
   final String key;
 
@@ -20,4 +24,15 @@ class TranslationEntry {
       locales: locales ?? this.locales,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TranslationEntry &&
+          runtimeType == other.runtimeType &&
+          key == other.key &&
+          _setEquality.equals(other.locales, locales);
+
+  @override
+  int get hashCode => key.hashCode ^ locales.hashCode;
 }

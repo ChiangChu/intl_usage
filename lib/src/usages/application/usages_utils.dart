@@ -17,12 +17,13 @@ class UsagesUtils {
   Future<Map<String, Set<UsageEntry>>> getUsages(
     List<TranslationEntry> entries, {
     bool debug = false,
+    required FileSystemUtils fileSystemUtils,
   }) async {
     // Initialize a map to store usage information.
     Map<String, Set<UsageEntry>> usages = <String, Set<UsageEntry>>{};
 
     // Search for Dart files within the 'lib' directory.
-    List<FileSystemEntity> dartFiles = await FileSystemUtils.searchForFiles(
+    List<File> dartFiles = await fileSystemUtils.searchForFiles(
       relativePath: 'lib',
       extension: FileExtension.dart,
     );
@@ -35,8 +36,7 @@ class UsagesUtils {
     RegExp regExp = RegExp("((?:'|\")[A-Za-z0-9.}{\$]+(?:'|\"))");
 
     // Iterate through each Dart file.
-    for (FileSystemEntity file in dartFiles) {
-      File currentFile = File(file.path);
+    for (File currentFile in dartFiles) {
       // Calculate the relative path of the file once.
       String relativePath =
           currentFile.path.substring(currentFile.path.indexOf('lib'));
@@ -55,20 +55,19 @@ class UsagesUtils {
           String line = lines[i];
           // Find all matches of the translation key pattern in the line.
           List<RegExpMatch> matches = regExp.allMatches(line).toList();
-          coverage = 0.0;
 
           // Check each match for coverage.
           for (RegExpMatch match in matches) {
-            coverage = _calculateCoverage(
+            MatchType matchType = _determineMatchType(
               translationKey: key,
               usageValue: match[0]!.replaceAll(RegExp('["\']'), ''),
             );
-            if (coverage > 0) {
+            if (matchType != MatchType.none) {
               // Add a UsageEntry for the matched key.
               usages[entry.key]!.add(UsageEntry(
                 filename: relativePath,
                 line: i + 1,
-                isUnsure: coverage != 1.0,
+                isUnsure: matchType != MatchType.full,
               ));
               // Move to the next line if a match is found.
               break;
@@ -86,42 +85,34 @@ class UsagesUtils {
     return usages;
   }
 
-  /// Calculates the coverage of a translation [translationKey] within a given [usageValue].
+  /// Determines the match type between a translation key and a usage value.
   ///
-  /// Returns a double representing the coverage, where 1.0 indicates a full match
-  /// and 0.0 indicates no match.
-  double _calculateCoverage({
+  /// [translationKey] The translation key to compare./// [usageValue] The value found in the code usage.
+  ///
+  /// Returns a [MatchType] indicating whether the key and value match fully,
+  /// partially, or not at all.
+  MatchType _determineMatchType({
     required String translationKey,
     required String usageValue,
   }) {
     if (usageValue == translationKey) {
-      // Full match, no need for splitting.
-      return 1.0;
+      return MatchType.full; // Full match
     }
 
-    double coverage = 0.0;
-
-    // Split the key and value to check for partial matches.
     List<String> keyParts = translationKey.split('.');
     List<String> valueParts = usageValue.split('.');
 
-    for (int i = 0; i < keyParts.length; i++) {
-      String keyPart = keyParts[i];
-      if (valueParts.length > i) {
-        // Remove quotes from the value part.
-        String valuePart = valueParts[i];
-
-        if (keyPart == valuePart) {
-          // Increment coverage based on the number of matching parts.
-          coverage += 1.0 / keyParts.length;
-        }
-      } else {
-        // No match for this part, reset coverage and break.
-        coverage = 0.0;
-        break;
+    if (valueParts.length < keyParts.length) {
+      bool isPartial = keyParts
+          .sublist(0, valueParts.length)
+          .every((part) => valueParts.contains(part));
+      if (isPartial) {
+        return MatchType.partial; // Partial match
       }
     }
 
-    return coverage;
+    return MatchType.none;
   }
 }
+
+enum MatchType { full, partial, none }

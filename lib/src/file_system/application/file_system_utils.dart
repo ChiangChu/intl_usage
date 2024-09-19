@@ -19,7 +19,7 @@ class FileSystemUtils {
   ///
   /// Returns a list of [FileSystemEntity] objects representing the found files.
   /// Throws a [FileNotFoundException] if the specified directory does not exist.
-  static Future<List<FileSystemEntity>> searchForFiles({
+  Future<List<File>> searchForFiles({
     required String relativePath,
     FileExtension? extension,
   }) async {
@@ -35,9 +35,12 @@ class FileSystemUtils {
     final List<FileSystemEntity> files =
         await dir.list(followLinks: true, recursive: true).toList();
 
-    return files.where((FileSystemEntity entity) {
-      if (extension == null) return true;
-      return entity.path.endsWith('.${extension.name}');
-    }).toList();
+    return files
+        .where((FileSystemEntity entity) {
+          if (extension == null) return true;
+          return entity.path.endsWith('.${extension.name}');
+        })
+        .map((FileSystemEntity entity) => File(entity.path))
+        .toList();
   }
 }
