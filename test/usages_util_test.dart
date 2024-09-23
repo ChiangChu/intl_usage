@@ -115,6 +115,64 @@ void main() {
         // Assert
         expect(usages['home.title'], isEmpty);
       });
+
+      test(
+          'Given a translation key with underscore in a Dart file, '
+          'When getUsages is called, '
+          'Then it should identify the usage as a full match', () async {
+        // Arrange
+        when(() => mockFileSystemUtils.searchForFiles(
+              relativePath: any(named: 'relativePath'),
+              extension: any(named: 'extension'),
+            )).thenAnswer((_) async => [mockFile]);
+        when(() => mockFile.path).thenReturn('lib/main.dart');
+        when(() => mockFile.readAsLines()).thenAnswer((_) async => [
+              "Text('home.sub_title'.tr());",
+            ]);
+        List<TranslationEntry> entries = [
+          TranslationEntry(key: 'home.sub_title', locales: {'en'}),
+        ];
+
+        // Act
+        Map<String, Set<UsageEntry>> usages = await usagesUtils.getUsages(
+          entries,
+          fileSystemUtils: mockFileSystemUtils,
+        );
+
+        // Assert
+        expect(usages['home.sub_title'], isNotEmpty);
+        expect(usages['home.sub_title']!.first.isUnsure, isFalse);
+      });
+
+      test(
+          'Given a translation key with hyphens in a Dart file, '
+          'When getUsages is called, '
+          'Then it should identify the usage as a full match', () async {
+        // Arrange
+        when(() => mockFileSystemUtils.searchForFiles(
+              relativePath: any(named: 'relativePath'),
+              extension: any(named: 'extension'),
+            )).thenAnswer((_) async => [mockFile]);
+        when(() => mockFile.path).thenReturn('lib/main.dart');
+        when(() => mockFile.readAsLines()).thenAnswer((_) async => [
+              "Text('home.sub-title'.tr());",
+            ]);
+        List<TranslationEntry> entries = [
+          TranslationEntry(key: 'home.sub-title', locales: {'en'}),
+        ];
+
+        // Act
+        Map<String, Set<UsageEntry>> usages = await usagesUtils.getUsages(
+          entries,
+          fileSystemUtils: mockFileSystemUtils,
+        );
+
+        print(usages);
+
+        // Assert
+        expect(usages['home.sub-title'], isNotEmpty);
+        expect(usages['home.sub-title']!.first.isUnsure, isFalse);
+      });
     });
   });
 }
