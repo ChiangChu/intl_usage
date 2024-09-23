@@ -33,7 +33,7 @@ class UsagesUtils {
         entries.map((entry) => MapEntry(entry.key, <UsageEntry>{})));
 
     // Precompile the regular expression for matching translation keys.
-    RegExp regExp = RegExp("((?:'|\")[A-Za-z0-9.}{\$]+(?:'|\"))");
+    RegExp regExp = RegExp("((?:'|\")[A-Za-z0-9._-]+(?:'|\"))");
 
     // Iterate through each Dart file.
     for (File currentFile in dartFiles) {
@@ -46,7 +46,6 @@ class UsagesUtils {
       }
       // Iterate through each translation entry.
       for (TranslationEntry entry in entries) {
-        double coverage = 0.0;
         // Store the translation key for faster access.
         String key = entry.key;
 
@@ -73,10 +72,6 @@ class UsagesUtils {
               break;
             }
           }
-        }
-
-        if (debug) {
-          _logger.print('${entry.key} with coverage of $coverage found');
         }
       }
     }

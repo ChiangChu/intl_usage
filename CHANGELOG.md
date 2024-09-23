@@ -1,3 +1,9 @@
+## [1.1.1] - 2024-09-23
+
+### Fixed
+
+* fixed issues with translation keys containing hyphen or underscore.
+
 ## [1.1.0] - 2024-09-19
 
 ### Added
