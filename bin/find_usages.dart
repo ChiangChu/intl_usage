@@ -29,6 +29,7 @@ Future<void> main(List<String> args) async {
   UsageResult usageResult;
 
   Configuration config = await ConfigurationUtils.loadConfiguration();
+  _logger.printWarning("config path: ${config.path}");
   String path = config.path ?? results.option(ArgParserUtil.path) as String;
 
   try {
@@ -41,6 +42,7 @@ Future<void> main(List<String> args) async {
       usagesUtils.getUsages(
         translations,
         fileSystemUtils: utils,
+        usedTranslations: config.exclude,
       ),
     );
   } on FileNotFoundException catch (e) {

@@ -18,6 +18,7 @@ class UsagesUtils {
     List<TranslationEntry> entries, {
     bool debug = false,
     required FileSystemUtils fileSystemUtils,
+    List<String> usedTranslations = const <String>[],
   }) async {
     // Initialize a map to store usage information.
     Map<String, Set<UsageEntry>> usages = <String, Set<UsageEntry>>{};
@@ -33,7 +34,7 @@ class UsagesUtils {
         entries.map((entry) => MapEntry(entry.key, <UsageEntry>{})));
 
     // Precompile the regular expression for matching translation keys.
-    RegExp regExp = RegExp("((?:'|\")[A-Za-z0-9._-]+(?:'|\"))");
+    RegExp regExp = RegExp(r'''((?:'|")[\w\$._\-{}]+(?:'|"))''');
 
     // Iterate through each Dart file.
     for (File currentFile in dartFiles) {
@@ -55,12 +56,22 @@ class UsagesUtils {
           // Find all matches of the translation key pattern in the line.
           List<RegExpMatch> matches = regExp.allMatches(line).toList();
 
+          if (debug) {
+            _logger.print("checking line: $line");
+            _logger.print("number of matches: ${matches.length}");
+          }
+
           // Check each match for coverage.
           for (RegExpMatch match in matches) {
             MatchType matchType = _determineMatchType(
               translationKey: key,
               usageValue: match[0]!.replaceAll(RegExp('["\']'), ''),
+              isDebug: debug,
+              usedTranslations: usedTranslations,
             );
+            if (debug) {
+              _logger.print("match type: $matchType");
+            }
             if (matchType != MatchType.none) {
               // Add a UsageEntry for the matched key.
               usages[entry.key]!.add(UsageEntry(
@@ -89,7 +100,18 @@ class UsagesUtils {
   MatchType _determineMatchType({
     required String translationKey,
     required String usageValue,
+    required bool isDebug,
+    required List<String> usedTranslations,
   }) {
+    if (usedTranslations.contains(translationKey)) {
+      return MatchType.full;
+    }
+
+    if (isDebug) {
+      _logger.print("working on usage value: $usageValue");
+      _logger.print("working on translation key: $translationKey");
+    }
+
     if (usageValue == translationKey) {
       return MatchType.full; // Full match
     }
@@ -97,13 +119,11 @@ class UsagesUtils {
     List<String> keyParts = translationKey.split('.');
     List<String> valueParts = usageValue.split('.');
 
-    if (valueParts.length < keyParts.length) {
-      bool isPartial = keyParts
-          .sublist(0, valueParts.length)
-          .every((part) => valueParts.contains(part));
-      if (isPartial) {
-        return MatchType.partial; // Partial match
-      }
+    bool isPartial = keyParts
+        .sublist(0, valueParts.length - 1)
+        .any((part) => valueParts.contains(part));
+    if (isPartial) {
+      return MatchType.partial; // Partial match
     }
 
     return MatchType.none;

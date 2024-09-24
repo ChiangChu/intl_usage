@@ -60,35 +60,6 @@ void main() {
       });
 
       test(
-          'Given a translation key with partial matches in a Dart file, '
-          'When getUsages is called, '
-          'Then it should identify the usage with isUnsure flag set to true',
-          () async {
-        // Arrange
-        when(() => mockFileSystemUtils.searchForFiles(
-              relativePath: any(named: 'relativePath'),
-              extension: any(named: 'extension'),
-            )).thenAnswer((_) async => [mockFile]);
-        when(() => mockFile.path).thenReturn('lib/main.dart');
-        when(() => mockFile.readAsLines()).thenAnswer((_) async => [
-              "Text('home'.tr());",
-            ]);
-        List<TranslationEntry> entries = [
-          TranslationEntry(key: 'home.title', locales: {'en'}),
-        ];
-
-        // Act
-        Map<String, Set<UsageEntry>> usages = await usagesUtils.getUsages(
-          entries,
-          fileSystemUtils: mockFileSystemUtils,
-        );
-
-        // Assert
-        expect(usages['home.title'], isNotEmpty);
-        expect(usages['home.title']!.first.isUnsure, true);
-      });
-
-      test(
           'Given no usages of translation keys in Dart files, '
           'When getUsages is called, '
           'Then it should return an empty map for the corresponding key',
@@ -167,11 +138,87 @@ void main() {
           fileSystemUtils: mockFileSystemUtils,
         );
 
-        print(usages);
-
         // Assert
         expect(usages['home.sub-title'], isNotEmpty);
         expect(usages['home.sub-title']!.first.isUnsure, isFalse);
+      });
+
+      test(
+          'Given a translation key with string interpolation at the end '
+          'When getUsages is called, '
+          'Then it should flag as unsure.', () async {
+        // Arrange
+        when(() => mockFileSystemUtils.searchForFiles(
+              relativePath: any(named: 'relativePath'),
+              extension: any(named: 'extension'),
+            )).thenAnswer((_) async => [mockFile]);
+        when(() => mockFile.path).thenReturn('lib/main.dart');
+        when(() => mockFile.readAsLines()).thenAnswer((_) async => [
+              r"Text('simple.enum.${StatusEnum.active}'.tr());",
+              r"Text('settings.name.$state'.tr());",
+            ]);
+        List<TranslationEntry> entries = [
+          TranslationEntry(key: 'simple.enum.active', locales: {'en'}),
+          TranslationEntry(key: 'settings.name.inactive', locales: {'en'}),
+        ];
+
+        // Act
+        Map<String, Set<UsageEntry>> usages = await usagesUtils.getUsages(
+          entries,
+          fileSystemUtils: mockFileSystemUtils,
+          debug: true,
+        );
+
+        // Assert
+        expect(usages['simple.enum.active'], isNotEmpty);
+        expect(usages['settings.name.inactive'], isNotEmpty);
+        expect(
+          usages['simple.enum.active']!.first.isUnsure,
+          isTrue,
+        );
+        expect(
+          usages['settings.name.inactive']!.first.isUnsure,
+          isTrue,
+        );
+      });
+
+      test(
+          'Given a translation key with string interpolation is not at the end '
+          'When getUsages is called, '
+          'Then it should flag as unsure.', () async {
+        // Arrange
+        when(() => mockFileSystemUtils.searchForFiles(
+              relativePath: any(named: 'relativePath'),
+              extension: any(named: 'extension'),
+            )).thenAnswer((_) async => [mockFile]);
+        when(() => mockFile.path).thenReturn('lib/main.dart');
+        when(() => mockFile.readAsLines()).thenAnswer((_) async => [
+              r"Text('simple.enum.${StatusEnum.active}.another'.tr());",
+              r"Text('settings.name.$state.another'.tr());",
+            ]);
+        List<TranslationEntry> entries = [
+          TranslationEntry(key: 'simple.enum.active.another', locales: {'en'}),
+          TranslationEntry(
+              key: 'settings.name.inactive.another', locales: {'en'}),
+        ];
+
+        // Act
+        Map<String, Set<UsageEntry>> usages = await usagesUtils.getUsages(
+          entries,
+          fileSystemUtils: mockFileSystemUtils,
+        );
+
+        // Assert
+        expect(usages['simple.enum.active.another'], isNotEmpty);
+        expect(usages['settings.name.inactive.another'], isNotEmpty);
+        expect(
+          usages['simple.enum.active.another']!.first.isUnsure,
+          isTrue,
+        );
+        expect(
+          usages['settings.name.inactive.another']!.first.isUnsure,
+          isTrue,
+        );
       });
     });
   });

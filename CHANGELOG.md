@@ -1,3 +1,13 @@
+## [1.2.0] - 2024-09-24
+
+### Added
+
+* `--known_unused_keys` option added as parameter as well as to the configuration file.
+
+### Fixed
+
+* fixed issues with translation keys containing string interpolation.
+
 ## [1.1.1] - 2024-09-23
 
 ### Fixed

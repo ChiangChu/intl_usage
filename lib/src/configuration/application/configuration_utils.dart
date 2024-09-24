@@ -8,6 +8,8 @@ import '../domain/configuration.dart';
 class ConfigurationUtils {
   /// The name of the configuration file.
   static String configFilename = 'intl_usage.yaml';
+  static final String _excludedKeysKey = 'known_used_keys';
+  static final String _pathKey = 'path';
 
   /// Loads the configuration from the `intl_usage.yaml` file.
   ///
@@ -22,7 +24,13 @@ class ConfigurationUtils {
     }
     try {
       YamlMap config = loadYaml(await configFile.readAsString());
-      return Configuration(path: config['path']);
+      List<String> excludedKeys = config.containsKey(_excludedKeysKey)
+          ? List<String>.from(config[_excludedKeysKey] as List<dynamic>)
+          : <String>[];
+      return Configuration(
+        path: config[_pathKey],
+        exclude: excludedKeys,
+      );
     } catch (e) {
       return Configuration(); // Return default configuration on error.
     }

@@ -22,7 +22,7 @@ Add this to your `pubspec.yaml` file as a dev dependency:
 
 ```yaml
 dev_dependencies:
-  intl_usage: ^1.0.0
+  intl_usage: ^1.2.0
 ```
 
 Make sure you also have `easy_localization` installed in your project:
@@ -61,16 +61,24 @@ one or more files.
 * **`--path`:** Specifies the path to your translation files. If not provided, the package defaults
   to searching in `assets/translations`. You can also define this path in a YAML configuration
   file (see below).
+* **`--known_used_keys`:** Specifies the translations keys you are sure of being used. Either
+  because these are used in a separate package, created dynamically or defined in a separate json
+  file that the system loads at runtime.
 
 **Using a YAML Configuration File:**
 
-You can create a `intl_usage.yaml` file in theroot of your project to define the translation path:
+You can create a `intl_usage.yaml` file in the root of your project to define the translation path:
 
 ```yaml
   path: your/translation/path
+  known_used_keys:
+    - key1
+    - key2
+    - ...
 ```
 
-This eliminates the need to specify the `--path` option every time you run the commands.
+This eliminates the need to specify the `--path` or the `--known_used_keys` option every time you
+run the commands.
 
 ## Limitations
 
