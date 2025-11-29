@@ -4,6 +4,8 @@ class Configuration {
   ///
   /// Can be null, indicating that a default path will be used.
   final String? path;
+
+  /// The keys to exclude.
   final List<String> exclude;
 
   /// Creates a [Configuration] object.

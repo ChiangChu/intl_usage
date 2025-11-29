@@ -3,6 +3,8 @@ import '../../features/translations/data/repositories/translations_repository_im
 import '../../features/translations/domain/repositories/translations_repository_interface.dart';
 import '../../features/usages/application/usages_service.dart';
 import '../../features/usages/data/repositories/usages_repository_implementation.dart';
+import '../../features/usages/data/services/translation_key_matcher.dart';
+import '../../features/usages/domain/services/translation_key_matcher_interface.dart';
 import '../../features/usages/domain/repositories/usages_repository_interface.dart';
 import '../application/configuration_service.dart';
 import '../data/repositories/configuration_repository_implementation.dart';
@@ -17,23 +19,33 @@ import '../domain/repositories/file_system_repository_interface.dart';
 /// services, ensuring that each part of the application receives the
 /// dependencies it needs without having to construct them itself.
 class DependencyContainer {
+  /// The configuration service.
   late final ConfigurationService configurationService;
+
+  /// The translations service.
   late final TranslationsService translationsService;
+
+  /// The usages service.
   late final UsagesService usagesService;
 
   late final IFileSystemRepository _fileSystemRepository;
   late final IConfigurationRepository _configurationRepository;
   late final ITranslationsRepository _translationsRepository;
   late final IUsagesRepository _usagesRepository;
+  late final ITranslationKeyMatcher _translationKeyMatcher;
 
   /// Creates a new instance of [DependencyContainer].
   DependencyContainer() {
     _fileSystemRepository = FileSystemRepository();
+    _translationKeyMatcher = TranslationKeyMatcher();
 
     _configurationRepository =
         ConfigurationRepositoryImpl(_fileSystemRepository);
     _translationsRepository = TranslationsRepositoryImpl(_fileSystemRepository);
-    _usagesRepository = UsagesRepositoryImpl(_fileSystemRepository);
+    _usagesRepository = UsagesRepositoryImpl(
+      _fileSystemRepository,
+      _translationKeyMatcher,
+    );
 
     configurationService = ConfigurationService(_configurationRepository);
     translationsService = TranslationsService(_translationsRepository);

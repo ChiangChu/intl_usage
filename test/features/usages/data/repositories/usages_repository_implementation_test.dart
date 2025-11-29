@@ -3,6 +3,7 @@ import 'package:intl_usage/src/core/domain/repositories/file_system_repository_i
 import 'package:intl_usage/src/features/usages/data/repositories/usages_repository_implementation.dart';
 import 'package:intl_usage/src/features/usages/domain/entities/usage_entry.dart';
 import 'package:intl_usage/src/features/usages/domain/repositories/usages_repository_interface.dart';
+import 'package:intl_usage/src/features/usages/data/services/translation_key_matcher.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
@@ -43,7 +44,10 @@ void main() {
 
   setUp(() {
     fakeFileSystemRepository = FakeFileSystemRepository();
-    usagesRepository = UsagesRepositoryImpl(fakeFileSystemRepository);
+    usagesRepository = UsagesRepositoryImpl(
+      fakeFileSystemRepository,
+      TranslationKeyMatcher(),
+    );
   });
 
   group('UsagesRepositoryImpl', () {
