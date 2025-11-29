@@ -85,13 +85,13 @@ class UsagesRepositoryImpl implements IUsagesRepository {
 }
 
 /// An enum representing the type of match found for a translation key.
-_enum MatchType { 
+enum MatchType {
   /// A full match, where the usage value is identical to the translation key.
-  full, 
+  full,
 
   /// A partial match, where the usage value is a prefix of the translation key.
-  partial, 
+  partial,
 
   /// No match found.
-  none 
+  none
 }
