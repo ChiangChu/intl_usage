@@ -9,6 +9,7 @@ import '../domain/repositories/translations_repository_interface.dart';
 class TranslationsService {
   final ITranslationsRepository _translationsRepo;
 
+  /// Creates a new instance of [TranslationsService].
   TranslationsService(this._translationsRepo);
 
   /// Fetches raw translation data from the given [path], aggregates it by key,

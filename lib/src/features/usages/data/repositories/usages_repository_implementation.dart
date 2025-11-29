@@ -1,14 +1,16 @@
 import '../../../../core/domain/entities/project_file.dart';
 import '../../../../core/domain/repositories/file_system_repository_interface.dart';
 import '../../domain/entities/usage_entry.dart';
+import '../../domain/services/translation_key_matcher_interface.dart';
 import '../../domain/repositories/usages_repository_interface.dart';
 
 /// A repository that handles finding usages of translation keys in the project.
 class UsagesRepositoryImpl implements IUsagesRepository {
   final IFileSystemRepository _fileSystemRepo;
+  final ITranslationKeyMatcher _matcher;
 
   /// Creates a new instance of [UsagesRepositoryImpl].
-  UsagesRepositoryImpl(this._fileSystemRepo);
+  UsagesRepositoryImpl(this._fileSystemRepo, this._matcher);
 
   @override
   Future<Map<String, Set<UsageEntry>>> findUsages(
@@ -30,7 +32,7 @@ class UsagesRepositoryImpl implements IUsagesRepository {
         final List<RegExpMatch> matches = regExp.allMatches(line).toList();
         for (final String key in translationKeys) {
           for (final RegExpMatch match in matches) {
-            MatchType matchType = _determineMatchType(
+            final MatchType matchType = _matcher.determineMatchType(
               translationKey: key,
               usageValue: match[0]!.replaceAll(RegExp('["\']'), ''),
             );
@@ -53,45 +55,4 @@ class UsagesRepositoryImpl implements IUsagesRepository {
 
     return usageMap;
   }
-
-  /// Determines the match type between a translation key and a usage value.
-  ///
-  /// [translationKey] The translation key to compare./// [usageValue] The value found in the code usage.
-  ///
-  /// Returns a [MatchType] indicating whether the key and value match fully,
-  /// partially, or not at all.
-  MatchType _determineMatchType({
-    required String translationKey,
-    required String usageValue,
-  }) {
-    if (usageValue == translationKey) {
-      return MatchType.full; // Full match
-    }
-
-    List<String> keyParts = translationKey.split('.');
-    List<String> valueParts = usageValue.split('.');
-
-    if (valueParts.length < keyParts.length) {
-      bool isPartial = keyParts
-          .sublist(0, valueParts.length)
-          .every((String part) => valueParts.contains(part));
-      if (isPartial) {
-        return MatchType.partial; // Partial match
-      }
-    }
-
-    return MatchType.none;
-  }
-}
-
-/// An enum representing the type of match found for a translation key.
-enum MatchType {
-  /// A full match, where the usage value is identical to the translation key.
-  full,
-
-  /// A partial match, where the usage value is a prefix of the translation key.
-  partial,
-
-  /// No match found.
-  none
 }

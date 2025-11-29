@@ -1,19 +1,18 @@
-# Find Unused Translations in Flutter Projects
+# Find Unused Translations in Dart/Flutter Projects
 
 [![Pub Version](https://img.shields.io/pub/v/intl_usage.svg)](https://pub.dev/packages/intl_usage)
 [![Build Status](https://github.com/ChiangChu/intl_usage/actions/workflows/dart.yml/badge.svg)](https://github.com/ChiangChu/intl_usage/actions)
 [![codecov](https://codecov.io/gh/ChiangChu/intl_usage/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/ChiangChu/intl_usage)
 
-**This package is used to find unused keys inside your easy_localization files.**
-Managing translations in Flutter projects can become messy over time. Unused keys accumulate,
+**A Dart package to find unused and missing internationalization (i18n) keys in your project.**
+
+Managing translations in Dart and Flutter projects can become messy over time. Unused keys accumulate,
 cluttering your translation files and making maintenance a headache. This package helps you
-effortlessly identify and remove unused translation keys **specifically in projects using
-the `easy_localization` package**, keeping your project clean and efficient.
+effortlessly identify and remove unused translation keys, keeping your project clean and efficient.
 
 ## Features
 
-* **Effortlessly identify and remove unused translation keys, reducing clutter and improving project
-  maintainability.**
+* **Identify and remove unused translation keys, reducing clutter and improving project maintainability.**
 * **Ensure consistency across all your translation files by detecting missing keys.**
 
 ## Installation
@@ -25,20 +24,17 @@ dev_dependencies:
   intl_usage: ^1.2.0
 ```
 
-Make sure you also have `easy_localization` installed in your project:
-
-```yaml
-dependencies:
-  easy_localization: ^latest_version
-```
+Then, run:
 
 ```bash
-  flutter pub get
+  dart pub get
 ```
 
 ## Usage
 
-**Find Unused Keys:**
+### Find Unused Keys
+
+To find unused translation keys, run the following command in your project root:
 
 ```bash
   dart run intl_usage:find_usages
@@ -47,43 +43,33 @@ dependencies:
 This command scans your project and prints a list of unused translation keys, as well as keys whose
 usage is uncertain (e.g., due to dynamic string concatenation).
 
-** Find Missing Keys:**
+### Find Missing Keys
+
+To check for missing keys across your translation files, run:
 
 ```bash
   dart run intl_usage:check_translations
 ```
 
-This command checks your translation files for consistency and reports any keys that are missing in
-one or more files.
+This command reports any keys that are missing in one or more translation files.
 
-**Customization Options:**
+### Configuration
 
-* **`--path`:** Specifies the path to your translation files. If not provided, the package defaults
-  to searching in `assets/translations`. You can also define this path in a YAML configuration
-  file (see below).
-* **`--known_used_keys`:** Specifies the translations keys you are sure of being used. Either
-  because these are used in a separate package, created dynamically or defined in a separate json
-  file that the system loads at runtime.
-
-**Using a YAML Configuration File:**
-
-You can create a `intl_usage.yaml` file in the root of your project to define the translation path:
+You can configure the path to your translation files by creating an `intl_usage.yaml` file in the root of your project:
 
 ```yaml
-  path: your/translation/path
-  known_used_keys:
-    - key1
-    - key2
-    - ...
+  path: lib/src/assets/translations
 ```
 
-This eliminates the need to specify the `--path` or the `--known_used_keys` option every time you
-run the commands.
+Alternatively, you can specify the path directly using the `--path` option:
+
+```bash
+  dart run intl_usage:find_usages --path lib/src/assets/translations
+```
 
 ## Limitations
 
-Currently, this package only supports translations generated with the `easy_localization`
-package.Support for other translation solutions may be added in future releases.
+This package is designed to work with JSON translation files. It may not be compatible with other file formats or translation management systems.
 
 ## License
 
