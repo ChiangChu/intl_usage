@@ -1,9 +1,14 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:intl_usage/intl_usage.dart';
 import 'package:intl_usage/src/arg_parser_util.dart';
-import 'package:intl_usage/src/file_system/application/file_system_utils.dart';
+import 'package:intl_usage/src/core/application/configuration_service.dart';
+import 'package:intl_usage/src/core/di/dependency_container.dart';
+import 'package:intl_usage/src/features/translations/application/translations_service.dart';
+import 'package:intl_usage/src/features/translations/domain/entities/translation_entry.dart';
+import 'package:intl_usage/src/features/usages/application/usages_service.dart';
+import 'package:intl_usage/src/features/usages/domain/entities/usage_entry.dart';
+import 'package:intl_usage/src/logger.dart';
 
 /// Type definition for the usage result, containing the number of unused and unsure entries.
 typedef UsageResult = ({int unused, int unsure});
@@ -12,10 +17,12 @@ final Logger _logger = Logger();
 
 /// Entry point for the command-line application.
 Future<void> main(List<String> args) async {
+  final DependencyContainer container = DependencyContainer();
+
+  final ConfigurationService configService = container.configurationService;
+  final TranslationsService translationService = container.translationsService;
+  final UsagesService usagesService = container.usagesService;
   final ArgParser parser = ArgParserUtil().parser;
-  final FileSystemUtils utils = FileSystemUtils();
-  final UsagesUtils usagesUtils = UsagesUtils();
-  final TranslationsUtil translationsUtil = TranslationsUtil();
 
   // Parse the command-line arguments.
   ArgResults results = parser.parse(args);
@@ -26,69 +33,47 @@ Future<void> main(List<String> args) async {
     exit(0);
   }
 
-  UsageResult usageResult;
-
-  Configuration config = await ConfigurationUtils.loadConfiguration();
-  _logger.printWarning("config path: ${config.path}");
-  String path = config.path ?? results.option(ArgParserUtil.path) as String;
-
   try {
-    // Get the translation entries from the specified path.
-    List<TranslationEntry> translations =
-        await translationsUtil.getTranslations(path, fileSystemUtils: utils);
+    _logger.print('Resolving configuration...');
+    final String path = await configService.getTranslationPath(results);
 
-    // Get the usage results (unused and unsure entries).
-    usageResult = await _printUsages(
-      usagesUtils.getUsages(
-        translations,
-        fileSystemUtils: utils,
-        usedTranslations: config.exclude,
-      ),
-    );
-  } on FileNotFoundException catch (e) {
-    // Handle the case where no translations are found.
-    _logger.printError(e.message);
-    exit(0);
-  }
+    _logger.print('loading translations from "$path"...');
+    final List<TranslationEntry> translations =
+        await translationService.getAggregatedTranslations(path);
 
-  // Print summary and exit based on the usage results.
-  if (usageResult.unsure > 0) {
-    _logger.printError('Found ${usageResult.unused} unused translations!');
+    _logger.print('Searching for usages in project...');
+    final Map<String, Set<UsageEntry>> usages =
+        await usagesService.findUsagesFor(translations);
+
+    final UsageResult usageResult = _processUsages(usages);
+    // Print summary and exit based on the usage results.
+    if (usageResult.unsure > 0) {
+      _logger.printError('Found ${usageResult.unused} unused translations!');
+      exit(1);
+    } else if (usageResult.unsure > 0) {
+      _logger.printWarning('Found ${usageResult.unsure} of unsure entries');
+    } else {
+      _logger.printSuccess('No unused keys found!');
+    }
+  } catch (e) {
+    _logger.printError('An unexpected error occured: ${e.toString()}');
     exit(1);
-  } else if (usageResult.unsure > 0) {
-    _logger.printWarning('Found ${usageResult.unsure} of unsure entries');
-  } else {
-    _logger.printSuccess('No unused keys found!');
   }
-
-  exit(0);
 }
 
-/// Prints usage information and returns the number of unused and unsure entries.
-///
-/// [usagesFuture] A future resolving to a map of translation keys to their usage entries.
-///
-/// Returns a [UsageResult] object containing the number of unused and unsure entries.
-Future<UsageResult> _printUsages(
-  Future<Map<String, Set<UsageEntry>>> usagesFuture,
-) async {
-  final Map<String, Set<UsageEntry>> usages = await usagesFuture;
+UsageResult _processUsages(Map<String, Set<UsageEntry>> usages) {
   int numberOfUnusedEntries = 0;
   int numberOfUnsureEntries = 0;
 
-  // Iterate through each translation key and its usages.
-  for (MapEntry<String, Set<UsageEntry>> entry in usages.entries) {
+  for (final MapEntry<String, Set<UsageEntry>> entry in usages.entries) {
     if (entry.value.isEmpty) {
-      // Log an error for unused keys and increment the count.
       _logger.printError('${entry.key} [no usages found]');
       numberOfUnusedEntries++;
-    } else if (entry.value.every((usage) => usage.isUnsure)) {
-      // Log a warning for keys with only unsure usages and increment the count.
+    } else if (entry.value.every((UsageEntry usage) => usage.isUnsure)) {
       _logger.printWarning('${entry.key} [unsure]');
       numberOfUnsureEntries++;
     }
   }
 
-  // Return the number of unused and unsure entries as a UsageResult object.
   return (unsure: numberOfUnsureEntries, unused: numberOfUnusedEntries);
 }

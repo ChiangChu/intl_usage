@@ -1,6 +1,10 @@
 import 'package:collection/collection.dart';
 
-/// Represents a single translation entry with its key and the locales it's available in.
+/// Represents a single, unique translation key and the set of locales
+/// in which it has been found.
+///
+/// This is a core domain entity that represents the aggregated state of a
+/// translation key across all translation files.
 class TranslationEntry {
   static const SetEquality<String> _setEquality = SetEquality<String>();
 
