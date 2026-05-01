@@ -12,6 +12,13 @@ class UsagesRepositoryImpl implements IUsagesRepository {
   /// Creates a new instance of [UsagesRepositoryImpl].
   UsagesRepositoryImpl(this._fileSystemRepo, this._matcher);
 
+  // Matches string literals (single or double quoted) containing valid key characters.
+  // Includes $, {, } to support Dart string interpolation like '$var' and '${expr}'.
+  static final RegExp _stringLiteralPattern =
+      RegExp("((?:'|\")[A-Za-z0-9._\${}-]+(?:'|\"))");
+
+  static final RegExp _quotePattern = RegExp('["\']');
+
   @override
   Future<Map<String, Set<UsageEntry>>> findUsages(
     List<String> translationKeys,
@@ -22,22 +29,27 @@ class UsagesRepositoryImpl implements IUsagesRepository {
       for (final String key in translationKeys) key: <UsageEntry>{},
     };
 
-    // Precompile the regular expression for matching translation keys.
-    final RegExp regExp = RegExp("((?:'|\")[A-Za-z0-9._-]+(?:'|\"))");
-
     for (final ProjectFile file in dartFiles) {
       final List<String> lines = file.content.split('\n');
       for (int i = 0; i < lines.length; i++) {
         final String line = lines[i];
-        final List<RegExpMatch> matches = regExp.allMatches(line).toList();
+        final List<RegExpMatch> matches =
+            _stringLiteralPattern.allMatches(line).toList();
+        if (matches.isEmpty) continue;
+
+        // Preprocess each match value once, independent of the translation keys.
+        final List<String> processedValues = matches
+            .map((RegExpMatch m) => m[0]!.replaceAll(_quotePattern, ''))
+            .map(_matcher.preprocessUsageValue)
+            .toList();
+
         for (final String key in translationKeys) {
-          for (final RegExpMatch match in matches) {
-            final MatchType matchType = _matcher.determineMatchType(
+          for (final String processedValue in processedValues) {
+            final MatchType matchType = _matcher.matchPreprocessed(
               translationKey: key,
-              usageValue: match[0]!.replaceAll(RegExp('["\']'), ''),
+              processedValue: processedValue,
             );
             if (matchType != MatchType.none) {
-              // Add a UsageEntry for the matched key.
               usageMap[key]!.add(
                 UsageEntry(
                   filename: file.path,
@@ -45,7 +57,6 @@ class UsagesRepositoryImpl implements IUsagesRepository {
                   isUnsure: matchType != MatchType.full,
                 ),
               );
-              // Move to the next line if a match is found.
               break;
             }
           }

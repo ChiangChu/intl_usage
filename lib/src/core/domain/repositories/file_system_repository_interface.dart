@@ -1,6 +1,5 @@
 import '../entities/project_file.dart';
 
-// ...
 /// An interface for a repository that abstracts file system operations.
 ///
 /// This contract decouples the application from the underlying file system API

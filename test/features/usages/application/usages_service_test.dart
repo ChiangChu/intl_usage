@@ -52,5 +52,48 @@ void main() {
         verifyNoMoreInteractions(mockUsagesRepository);
       },
     );
+    test(
+      '''
+      GIVEN entries where some keys are fully matched, some unsure, and some missing
+      WHEN findUsagesFor is called
+      THEN it passes through the repository result without modification
+      ''',
+      () async {
+        // GIVEN
+        final List<TranslationEntry> testEntries = <TranslationEntry>[
+          TranslationEntry(key: 'greeting.title', locales: <String>{'en'}),
+          TranslationEntry(key: 'greeting.he.title', locales: <String>{'en'}),
+          TranslationEntry(key: 'missing.key', locales: <String>{'en'}),
+        ];
+        final List<String> expectedKeys = <String>[
+          'greeting.title',
+          'greeting.he.title',
+          'missing.key',
+        ];
+
+        final Map<String, Set<UsageEntry>> repositoryResult =
+            <String, Set<UsageEntry>>{
+          'greeting.title': <UsageEntry>{
+            UsageEntry(filename: 'lib/home.dart', line: 1, isUnsure: false),
+          },
+          'greeting.he.title': <UsageEntry>{
+            UsageEntry(filename: 'lib/home.dart', line: 2, isUnsure: true),
+          },
+          'missing.key': <UsageEntry>{},
+        };
+
+        when(() => mockUsagesRepository.findUsages(expectedKeys))
+            .thenAnswer((_) async => repositoryResult);
+
+        // WHEN
+        final Map<String, Set<UsageEntry>> result =
+            await usagesService.findUsagesFor(testEntries);
+
+        // THEN
+        expect(result['greeting.title']!.first.isUnsure, isFalse);
+        expect(result['greeting.he.title']!.first.isUnsure, isTrue);
+        expect(result['missing.key']!, isEmpty);
+      },
+    );
   });
 }

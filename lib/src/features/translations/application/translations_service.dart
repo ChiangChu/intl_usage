@@ -44,15 +44,14 @@ class TranslationsService {
   Map<String, List<String>> findMissingKeys(
     List<TranslationEntry> translations,
   ) {
-    Map<String, List<String>> missingKeys = <String, List<String>>{};
-    TranslationEntry translationEntryWithAllLocales = translations.reduce(
-      (TranslationEntry a, TranslationEntry b) =>
-          b.locales.length > a.locales.length ? b : a,
+    final Map<String, List<String>> missingKeys = <String, List<String>>{};
+    final Set<String> allLocales = translations.fold(
+      <String>{},
+      (Set<String> acc, TranslationEntry entry) => acc..addAll(entry.locales),
     );
 
-    for (TranslationEntry entry in translations) {
-      Set<String> missingLocales =
-          translationEntryWithAllLocales.locales.difference(entry.locales);
+    for (final TranslationEntry entry in translations) {
+      final Set<String> missingLocales = allLocales.difference(entry.locales);
       for (String missingLocale in missingLocales) {
         missingKeys.putIfAbsent(missingLocale, () => <String>[]).add(entry.key);
       }

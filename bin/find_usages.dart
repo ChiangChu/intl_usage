@@ -25,7 +25,7 @@ Future<void> main(List<String> args) async {
   final ArgParser parser = ArgParserUtil().parser;
 
   // Parse the command-line arguments.
-  ArgResults results = parser.parse(args);
+  final ArgResults results = parser.parse(args);
 
   // Handle the help flag.
   if (results.flag(ArgParserUtil.help)) {
@@ -47,7 +47,7 @@ Future<void> main(List<String> args) async {
 
     final UsageResult usageResult = _processUsages(usages);
     // Print summary and exit based on the usage results.
-    if (usageResult.unsure > 0) {
+    if (usageResult.unused > 0) {
       _logger.printError('Found ${usageResult.unused} unused translations!');
       exit(1);
     } else if (usageResult.unsure > 0) {
@@ -56,7 +56,7 @@ Future<void> main(List<String> args) async {
       _logger.printSuccess('No unused keys found!');
     }
   } catch (e) {
-    _logger.printError('An unexpected error occured: ${e.toString()}');
+    _logger.printError('An unexpected error occurred: ${e.toString()}');
     exit(1);
   }
 }

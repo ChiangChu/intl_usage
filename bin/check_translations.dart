@@ -27,21 +27,31 @@ Future<void> main(List<String> args) async {
     exit(0);
   }
 
-  final String path = await configService.getTranslationPath(results);
-  final List<TranslationEntry> translations =
-      await translationsService.getAggregatedTranslations(path);
-  final Map<String, List<String>> missingKeys =
-      translationsService.findMissingKeys(translations);
+  try {
+    _logger.print('Resolving configuration...');
+    final String path = await configService.getTranslationPath(results);
 
-  // Report any missing keys.
-  if (missingKeys.isNotEmpty) {
-    for (MapEntry<String, List<String>> entry in missingKeys.entries) {
-      _logger.printError(
-        'Locale ${entry.key} is missing keys: ${entry.value.join(", ")}',
-      );
+    _logger.print('Loading translations from "$path"...');
+    final List<TranslationEntry> translations =
+        await translationsService.getAggregatedTranslations(path);
+
+    _logger.print('Checking translations for missing keys...');
+    final Map<String, List<String>> missingKeys =
+        translationsService.findMissingKeys(translations);
+
+    // Report any missing keys.
+    if (missingKeys.isNotEmpty) {
+      for (final MapEntry<String, List<String>> entry in missingKeys.entries) {
+        _logger.printError(
+          'Locale ${entry.key} is missing keys: ${entry.value.join(", ")}',
+        );
+      }
+      exit(1);
     }
-    exit(1); // Indicate an error (missing keys found).
-  }
 
-  exit(0); // Indicate success (no missing keys).
+    exit(0);
+  } catch (e) {
+    _logger.printError('An unexpected error occurred: ${e.toString()}');
+    exit(1);
+  }
 }

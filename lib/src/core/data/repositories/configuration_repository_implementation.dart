@@ -18,8 +18,10 @@ class ConfigurationRepositoryImpl implements IConfigurationRepository {
         await _fileSystemRepo.findFileByName('intl_usage.yaml');
     if (configFile != null) {
       final YamlMap config = loadYaml(configFile.content);
+      final List<String> exclude =
+          (config['exclude'] as YamlList?)?.cast<String>() ?? <String>[];
 
-      return Configuration(path: config['path']);
+      return Configuration(path: config['path'] as String?, exclude: exclude);
     }
     return Configuration();
   }

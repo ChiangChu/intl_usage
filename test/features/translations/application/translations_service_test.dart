@@ -72,7 +72,7 @@ void main() {
         '''
         GIVEN a list of aggregated translation entries where some keys are missing in certain locales
         WHEN findMissingKeys is called
-        THEN it should return a map identifying exactly which keys are missing for each locale        
+        THEN it should return a map identifying exactly which keys are missing for each locale
         ''',
         () {
           // GIVEN
@@ -92,6 +92,32 @@ void main() {
           expect(missingKeys['en'], <String>['key3']);
           expect(missingKeys['fr'], containsAll(<String>['key2', 'key3']));
           expect(missingKeys['fr']!.length, 2);
+        },
+      );
+
+      test(
+        '''
+        GIVEN entries where no single entry covers all locales
+        WHEN findMissingKeys is called
+        THEN it should detect missing locales across the full union of all locales
+        ''',
+        () {
+          // GIVEN – key1 has {de, en, fr}, key2 has {de, en, es}
+          // No single entry covers all 4 locales; the union is {de, en, fr, es}.
+          final List<TranslationEntry> testEntries = <TranslationEntry>[
+            TranslationEntry(key: 'key1', locales: <String>{'de', 'en', 'fr'}),
+            TranslationEntry(key: 'key2', locales: <String>{'de', 'en', 'es'}),
+          ];
+
+          // WHEN
+          final Map<String, List<String>> missingKeys =
+              translationsService.findMissingKeys(testEntries);
+
+          // THEN
+          expect(missingKeys['es'], <String>['key1']);
+          expect(missingKeys['fr'], <String>['key2']);
+          expect(missingKeys.containsKey('de'), isFalse);
+          expect(missingKeys.containsKey('en'), isFalse);
         },
       );
     });
